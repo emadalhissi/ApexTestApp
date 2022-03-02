@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "820086547078",
+    "project_id": "apextestapp-d230a",
+    "storage_bucket": "apextestapp-d230a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:820086547078:android:c9ce467dcf01318d6ee707",
+        "android_client_info": {
+          "package_name": "com.example.apex_test_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "820086547078-04sa2r268ars7qjgcd4lvda8m2aofvmv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.apex_test_app",
+            "certificate_hash": "f77eb64910ba015f8c906e4c660e6ee5d6a54e81"
+          }
+        },
+        {
+          "client_id": "820086547078-f07ej3gccjsnk9ueuorm3c979p6499ve.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCAk_5M8y-hYlepiCAq8DR67xzpjVH7kvM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "820086547078-f07ej3gccjsnk9ueuorm3c979p6499ve.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
