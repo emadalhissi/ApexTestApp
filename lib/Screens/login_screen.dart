@@ -1,4 +1,5 @@
 import 'package:apex_test_app/Helpers/snakbar.dart';
+import 'package:apex_test_app/Screens/map_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -141,10 +142,22 @@ class _LoginScreenState extends State<LoginScreen> with SnackBarHelper {
       );
       print('emailVerified? ' + '${userCredential.user!.emailVerified}');
       if (userCredential.user!.emailVerified == false) {
-        showSnackBar(context, message: 'Please verify your email!', error: true,);
+        showSnackBar(
+          context,
+          message: 'Please verify your email!',
+          error: true,
+        );
         await user!.sendEmailVerification();
-      } else if(userCredential.user!.emailVerified == true) {
-        showSnackBar(context, message: 'Logged in successfully!',);
+      } else if (userCredential.user!.emailVerified == true) {
+        showSnackBar(
+          context,
+          message: 'Logged in successfully!',
+        );
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const MapPage(),
+            ));
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
