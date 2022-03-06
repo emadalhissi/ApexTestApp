@@ -1,14 +1,17 @@
 import 'package:apex_test_app/Providers/lang_provider.dart';
 import 'package:apex_test_app/Screens/login_screen.dart';
+import 'package:apex_test_app/Screens/map_page.dart';
 import 'package:apex_test_app/Screens/register_screen.dart';
+import 'package:apex_test_app/Shared%20Preferences/shared_preferences_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await SharedPreferencesController().initSharedPreferences();
   await Firebase.initializeApp();
   runApp(const MyApp());
 }
@@ -37,6 +40,8 @@ class _MyAppState extends State<MyApp> {
 }
 
 class MyMaterialApp extends StatelessWidget {
+
+
   const MyMaterialApp({
     Key? key,
   }) : super(key: key);
@@ -51,19 +56,27 @@ class MyMaterialApp extends StatelessWidget {
         // '/intro_screen': (context) => const IntroScreen(),
         '/login_screen': (context) => const LoginScreen(),
         '/register_screen': (context) => const RegisterScreen(),
+        '/map_screen': (context) => const MapPage(),
         // '/main_screen': (context) => const MainScreen(),
         // '/notifications_screen': (context) => const NotificationsScreen(),
       },
-      initialRoute: '/login_screen',
+      initialRoute: SharedPreferencesController().checkLoggedIn == true
+          ? '/map_screen'
+          : '/login_screen',
       // localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: const [
         Locale('ar'),
         Locale('en'),
       ],
-      locale: Locale('en'),
+      locale: const Locale('en'),
     );
+
+
   }
+
 }
+
+
 
 // FOR RESTARTING APP
 // CALL IT FROM ANYWHERE USING => RestartWidget.restartApp(context)

@@ -11,15 +11,20 @@ class LocationProvider extends ChangeNotifier {
   //   notifyListeners();
   // }
 
-  double myLatLocation = 0;
-  double myLngLocation = 0;
+  late double myLatLocation = 0;
+  late double myLngLocation = 0;
 
-  late CameraPosition myCameraPosition = CameraPosition(target: LatLng(myLatLocation, myLngLocation),zoom: 16,);
+  late CameraPosition myCameraPosition = CameraPosition(
+    target: LatLng(myLatLocation, myLngLocation),
+    zoom: 18,
+  );
+
   void changeLocation({required double Lat, required double Lng}) {
     myLatLocation = Lat;
     myLngLocation = Lng;
     notifyListeners();
   }
+
   void changeCameraPosition({required CameraPosition cameraPosition}) {
     myCameraPosition = cameraPosition;
   }

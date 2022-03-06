@@ -1,5 +1,6 @@
 import 'package:apex_test_app/Helpers/snakbar.dart';
 import 'package:apex_test_app/Screens/map_page.dart';
+import 'package:apex_test_app/Shared%20Preferences/shared_preferences_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -153,6 +154,7 @@ class _LoginScreenState extends State<LoginScreen> with SnackBarHelper {
           context,
           message: 'Logged in successfully!',
         );
+        SharedPreferencesController().saveLoggedIn();
         Navigator.pushReplacement(
             context,
             MaterialPageRoute(
