@@ -154,6 +154,9 @@ class _LoginScreenState extends State<LoginScreen> with SnackBarHelper {
           context,
           message: 'Logged in successfully!',
         );
+        print('userCredential => ${userCredential.user!.uid}');
+        SharedPreferencesController().saveUId(userName: userCredential.user!.uid);
+        print('userCredential from Shared => ${SharedPreferencesController().getUId}');
         SharedPreferencesController().saveLoggedIn();
         Navigator.pushReplacement(
             context,

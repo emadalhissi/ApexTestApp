@@ -14,6 +14,9 @@ class LocationProvider extends ChangeNotifier {
   late double myLatLocation = 0;
   late double myLngLocation = 0;
 
+  late String startPoint;
+  late String endPoint;
+
   late CameraPosition myCameraPosition = CameraPosition(
     target: LatLng(myLatLocation, myLngLocation),
     zoom: 18,
@@ -27,5 +30,16 @@ class LocationProvider extends ChangeNotifier {
 
   void changeCameraPosition({required CameraPosition cameraPosition}) {
     myCameraPosition = cameraPosition;
+    notifyListeners();
+  }
+
+  void changeStartPoint({required String start}) {
+    startPoint = start;
+    notifyListeners();
+  }
+
+  void changeEndPoint({required String end}) {
+    endPoint = end;
+    notifyListeners();
   }
 }

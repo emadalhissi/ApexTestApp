@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 enum SPKeys {
   firstVisit,
   loggedIn,
-  userName,
+  uId,
   email,
   password,
   fullName,
@@ -52,14 +52,14 @@ class SharedPreferencesController {
   bool get checkLoggedIn =>
       _sharedPrefLibObj.getBool(SPKeys.loggedIn.toString()) ?? false;
 
-  Future<void> saveUserName({
+  Future<void> saveUId({
     required String userName,
   }) async {
-    await _sharedPrefLibObj.setString(SPKeys.userName.toString(), userName);
+    await _sharedPrefLibObj.setString(SPKeys.uId.toString(), userName);
   }
 
-  String get getUserName =>
-      _sharedPrefLibObj.getString(SPKeys.userName.toString()) ?? '';
+  String get getUId =>
+      _sharedPrefLibObj.getString(SPKeys.uId.toString()) ?? '';
 
   Future<void> saveEmail({
     required String email,

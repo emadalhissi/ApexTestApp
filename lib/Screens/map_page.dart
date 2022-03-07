@@ -1,47 +1,38 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
+import 'package:apex_test_app/Controllers/fb_firestore_users_controller.dart';
+import 'package:apex_test_app/Helpers/snakbar.dart';
+import 'package:apex_test_app/Models/user.dart';
 import 'package:apex_test_app/Providers/lang_provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:apex_test_app/Screens/notes_screen.dart';
+import 'package:apex_test_app/Screens/tracks_screen.dart';
+import 'package:apex_test_app/Shared%20Preferences/shared_preferences_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:location/location.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart' as GeoLocator;
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:provider/provider.dart';
-import 'dart:ui' as ui;
-import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 class MapPage extends StatefulWidget {
-  const MapPage({Key? key}) : super(key: key);
+  const MapPage({
+    Key? key,
+    this.user,
+  }) : super(key: key);
+
+  final USER? user;
 
   @override
   State<MapPage> createState() => _MapPageState();
 }
 
-class _MapPageState extends State<MapPage> {
-  FirebaseFirestore fireStore = FirebaseFirestore.instance;
-  DocumentReference user =
-      FirebaseFirestore.instance.collection('test').doc('9D6COaDRianpqxkkXo2R');
-
-  Future<void> addUser() {
-    // Call the user's CollectionReference to add a new user
-    return user.update({
-          'full_name': 'Emad Alhissi',
-          'company': 'Apex for IT Solutions',
-          'age': '23',
-        })
-        .then((value) => print("User Added"))
-        .catchError((error) => print("Failed to add user: $error"));
-  }
-
+class _MapPageState extends State<MapPage> with SnackBarHelper{
   // File? _myFile;
   Uint8List? _imageFile;
 
@@ -85,8 +76,15 @@ class _MapPageState extends State<MapPage> {
           extendBodyBehindAppBar: true,
           appBar: AppBar(
             leading: IconButton(
-              onPressed: addUser,
-              icon: const Icon(Icons.add),
+              onPressed: () async {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TracksScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.track_changes),
             ),
             backgroundColor: const Color(0xff222222),
             title: const Text('Google Map'),
@@ -97,6 +95,14 @@ class _MapPageState extends State<MapPage> {
                   emptyLatLngList();
                 },
                 icon: const Icon(Icons.delete),
+              ),
+              IconButton(
+                onPressed: () async {
+                  await FirebaseAuth.instance.signOut();
+                  Navigator.pushReplacementNamed(context, '/login_screen');
+                  await SharedPreferencesController().logout();
+                },
+                icon: const Icon(Icons.logout),
               ),
             ],
           ),
@@ -138,6 +144,7 @@ class _MapPageState extends State<MapPage> {
                             if (image1 == null) return;
                             saveImage(image1);
                           });
+                          await saveTrack();
                         }
                         setState(() {
                           started == false ? started = true : started = false;
@@ -162,11 +169,30 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  // String uint8ListTob64(Uint8List uint8list) {
-  //   String base64String = base64Encode(uint8list);
-  //   String header = "data:image/png;base64,";
-  //   return header + base64String;
-  // }
+  Future<void> saveTrack() async {
+    bool status = await FbFireStoreUsersController().create(user: user);
+
+    if(status) {
+      showSnackBar(context, message: 'Added Successfully', error: false,);
+    }
+  }
+
+  USER get user {
+    var currentUser = FirebaseAuth.instance.currentUser;
+    final DateTime now = DateTime.now();
+    final DateFormat formatter = DateFormat('yyyy-MM-dd');
+    final String formattedDate = formatter.format(now);
+    String formattedTime = DateFormat.Hms().format(now);
+    USER user = widget.user == null ? USER() : widget.user!;
+    user.email = currentUser!.email!;
+    user.date = formattedDate;
+    user.time = formattedTime;
+    user.startPoint =
+        Provider.of<LocationProvider>(context, listen: false).startPoint;
+    user.endPoint =
+        Provider.of<LocationProvider>(context, listen: false).endPoint;
+    return user;
+  }
 
   Future<String> saveImage(Uint8List bytes) async {
     await [Permission.storage].request();
@@ -239,6 +265,9 @@ class _MapPageState extends State<MapPage> {
       );
       startPosition = res;
     });
+
+    Provider.of<LocationProvider>(context, listen: false)
+        .changeStartPoint(start: res.toString());
   }
 
   Future<void> _getCurrentEndLocation() async {
@@ -248,6 +277,7 @@ class _MapPageState extends State<MapPage> {
     setState(() {
       endPosition = res;
     });
+    Provider.of<LocationProvider>(context, listen: false).changeEndPoint(end: res.toString());
   }
 
   Future<void> setPolyLines() async {
@@ -269,63 +299,4 @@ class _MapPageState extends State<MapPage> {
       latLng.clear();
     });
   }
-
-// void takeScreenShot() async {
-//   print('===takeScreenShot===');
-//   await [Permission.storage].request();
-//
-//   final time = DateTime.now()
-//       .toIso8601String()
-//       .replaceAll('.', '-')
-//       .replaceAll(':', '-');
-//   final name = 'screenshot_$time';
-//
-//   RenderRepaintBoundary boundary = previewContainer.currentContext!
-//       .findRenderObject() as RenderRepaintBoundary;
-//   ui.Image image = await boundary.toImage();
-//   final directory = (await getApplicationDocumentsDirectory()).path;
-//   ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-//   Uint8List pngBytes = byteData!.buffer.asUint8List();
-//   print(pngBytes);
-//   File imgFile = File('$directory/$name.png');
-//   final file = await imgFile.writeAsBytes(pngBytes);
-//   print(file);
-// }
-//
-// Future<void> _captureScreen() async {
-//   print('_captureScreen');
-//   await [Permission.storage].request();
-//
-//   final time = DateTime.now()
-//       .toIso8601String()
-//       .replaceAll('.', '-')
-//       .replaceAll(':', '-');
-//   final name = 'screenshot_$time';
-//   List<String> imagePaths = [];
-//   final RenderBox box = context.findRenderObject() as RenderBox;
-//   return Future.delayed(const Duration(milliseconds: 20), () async {
-//     RenderRepaintBoundary? boundary = previewContainer.currentContext!
-//         .findRenderObject() as RenderRepaintBoundary?;
-//     ui.Image image = await boundary!.toImage();
-//     final directory = (await getApplicationDocumentsDirectory()).path;
-//     ByteData? byteData =
-//         await image.toByteData(format: ui.ImageByteFormat.png);
-//     Uint8List pngBytes = byteData!.buffer.asUint8List();
-//     File imgFile = File('$directory/$name.png');
-//     print(imgFile);
-//     imgFile.writeAsBytes(pngBytes);
-//     setState(() {
-//       _myFile = imgFile;
-//     });
-//     // imagePaths.add(imgFile.path);
-//     // imgFile.writeAsBytes(pngBytes).then((value) async {
-//     //   // await Share.shareFiles(imagePaths,
-//     //   //     subject: 'Share',
-//     //   //     text: 'Check this Out!',
-//     //   //     sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
-//     // }).catchError((onError) {
-//     //   print(onError);
-//     // });
-//   });
-// }
 }
