@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -16,6 +18,10 @@ class LocationProvider extends ChangeNotifier {
 
   late String startPoint;
   late String endPoint;
+
+  late String imageUrl;
+
+  late File imageFile;
 
   late CameraPosition myCameraPosition = CameraPosition(
     target: LatLng(myLatLocation, myLngLocation),
@@ -40,6 +46,17 @@ class LocationProvider extends ChangeNotifier {
 
   void changeEndPoint({required String end}) {
     endPoint = end;
+    notifyListeners();
+  }
+
+  Future<void> changeImageUrl({required String url}) async {
+    imageUrl = url;
+    notifyListeners();
+    
+  }
+
+  void changeFile({required File file}) {
+    imageFile = file;
     notifyListeners();
   }
 }

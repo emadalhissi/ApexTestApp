@@ -5,6 +5,7 @@ class USER {
   late String time;
   late String startPoint;
   late String endPoint;
+  late String image;
 
   USER();
 
@@ -14,6 +15,7 @@ class USER {
     time = documentMap['time'];
     startPoint = documentMap['startPoint'];
     endPoint = documentMap['endPoint'];
+    image = documentMap['image'];
   }
 
   Map<String, dynamic> toMap() {
@@ -23,6 +25,7 @@ class USER {
     map['time'] = time;
     map['startPoint'] = startPoint;
     map['endPoint'] = endPoint;
+    map['image'] = image;
     return map;
   }
 }

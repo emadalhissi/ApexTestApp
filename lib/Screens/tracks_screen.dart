@@ -100,6 +100,8 @@ class _TracksScreenState extends State<TracksScreen> with SnackBarHelper {
                           ),
                           const SizedBox(height: 5),
                           Text(document[index].get('endPoint')),
+                          SizedBox(height: 15),
+                          Image(image: NetworkImage('${document[index].get('image')}')),
                         ],
                       ),
                     ),

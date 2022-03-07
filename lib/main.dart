@@ -1,4 +1,4 @@
-import 'package:apex_test_app/Providers/lang_provider.dart';
+import 'package:apex_test_app/Providers/location_provider.dart';
 import 'package:apex_test_app/Screens/login_screen.dart';
 import 'package:apex_test_app/Screens/map_page.dart';
 import 'package:apex_test_app/Screens/register_screen.dart';

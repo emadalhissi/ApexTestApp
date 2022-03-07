@@ -1,18 +1,22 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:apex_test_app/Controllers/fb_firestore_users_controller.dart';
+import 'package:apex_test_app/Controllers/fb_storage_users_controller.dart';
 import 'package:apex_test_app/Helpers/snakbar.dart';
 import 'package:apex_test_app/Models/user.dart';
-import 'package:apex_test_app/Providers/lang_provider.dart';
+import 'package:apex_test_app/Providers/location_provider.dart';
 import 'package:apex_test_app/Screens/notes_screen.dart';
 import 'package:apex_test_app/Screens/tracks_screen.dart';
 import 'package:apex_test_app/Shared%20Preferences/shared_preferences_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:location/location.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart' as GeoLocator;
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -32,9 +36,11 @@ class MapPage extends StatefulWidget {
   State<MapPage> createState() => _MapPageState();
 }
 
-class _MapPageState extends State<MapPage> with SnackBarHelper{
+class _MapPageState extends State<MapPage> with SnackBarHelper {
   // File? _myFile;
   Uint8List? _imageFile;
+  String imageURL = 'imageUrl';
+  bool imageStatus = false;
 
   final screenshotController = ScreenshotController();
 
@@ -137,14 +143,17 @@ class _MapPageState extends State<MapPage> with SnackBarHelper{
                           // takeScreenShot();
                           // await _captureScreen();
                           // final image = await screenshotController.capture(delay: const Duration(seconds: 1));
-                          Future.delayed(const Duration(seconds: 3), () async {
-                            final image1 =
-                                await _googleMapController.takeSnapshot();
-                            // uint8ListTob64(image!);
-                            if (image1 == null) return;
-                            saveImage(image1);
+
+                          final image1 =
+                              await _googleMapController.takeSnapshot();
+                          // uint8ListTob64(image!);
+                          if (image1 == null) return;
+                          await saveImage(image1);
+                          await saveTrackImage();
+
+                          Future.delayed(const Duration(seconds: 5), () async {
+                            await saveTrack();
                           });
-                          await saveTrack();
                         }
                         setState(() {
                           started == false ? started = true : started = false;
@@ -169,12 +178,24 @@ class _MapPageState extends State<MapPage> with SnackBarHelper{
     );
   }
 
-  Future<void> saveTrack() async {
-    bool status = await FbFireStoreUsersController().create(user: user);
-
-    if(status) {
-      showSnackBar(context, message: 'Added Successfully', error: false,);
-    }
+  Future<void> saveTrackImage() async {
+    print('Entered saveTrackImage, before Cloture');
+    print(Provider.of<LocationProvider>(context, listen: false).imageFile);
+    await FbStorageUsersController().uploadImage(
+        context: context,
+        file: Provider.of<LocationProvider>(context, listen: false).imageFile,
+        callBackUrl: ({required String url, required bool status}) {
+          print(url);
+          print('${url.toString()}');
+          print('URL from map page => $url');
+          print('FROM MY CALLBACK');
+          setState(() {
+            imageURL = url;
+            imageStatus = status;
+          });
+          Provider.of<LocationProvider>(context, listen: false).changeImageUrl(url: url);
+        });
+    print('Entered saveTrackImage, after Cloture');
   }
 
   USER get user {
@@ -191,19 +212,49 @@ class _MapPageState extends State<MapPage> with SnackBarHelper{
         Provider.of<LocationProvider>(context, listen: false).startPoint;
     user.endPoint =
         Provider.of<LocationProvider>(context, listen: false).endPoint;
+    user.image = Provider.of<LocationProvider>(context, listen: false).imageUrl;
     return user;
+  }
+
+  Future<void> saveTrack() async {
+    print('before user: user');
+    bool status = await FbFireStoreUsersController().create(user: user);
+    print('after user: user');
+
+    if (status) {
+      showSnackBar(
+        context,
+        message: 'Added Successfully',
+        error: false,
+      );
+    } else {
+      showSnackBar(
+        context,
+        message: 'Add Failed',
+        error: true,
+      );
+    }
   }
 
   Future<String> saveImage(Uint8List bytes) async {
     await [Permission.storage].request();
 
+    print('converted file');
     final time = DateTime.now()
         .toIso8601String()
         .replaceAll('.', '-')
         .replaceAll(':', '-');
     final name = 'screenshot_$time';
     final result = await ImageGallerySaver.saveImage(bytes, name: name);
-    return result['filePath'];
+    final String filePath = result['filePath'];
+    Uint8List imageInUnit8List = bytes;
+    final tempDir = await getTemporaryDirectory();
+    File convertedFile = await File('${tempDir.path}/image.png').create();
+    convertedFile.writeAsBytesSync(imageInUnit8List);
+
+    Provider.of<LocationProvider>(context, listen: false)
+        .changeFile(file: convertedFile);
+    return filePath;
   }
 
   Future<void> _getLocation() async {
@@ -277,7 +328,8 @@ class _MapPageState extends State<MapPage> with SnackBarHelper{
     setState(() {
       endPosition = res;
     });
-    Provider.of<LocationProvider>(context, listen: false).changeEndPoint(end: res.toString());
+    Provider.of<LocationProvider>(context, listen: false)
+        .changeEndPoint(end: res.toString());
   }
 
   Future<void> setPolyLines() async {
